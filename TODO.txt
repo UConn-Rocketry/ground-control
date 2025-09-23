@@ -1,0 +1,11 @@
+TODO: 
+- Figure out what tf is going on with indexes_in_struct
+- Fix up bottom panel
+	- Put serial/port/struct selection menu on left
+	- Put command/abort menu in middle
+	- Put status indicator (Vibing!), valve controls on right
+- Add labels to all graphs
+- Paginate readouts
+	- Add header to indicate which page is selected
+		- Liquid Fuel System Data
+		- Rocket Motion Data
