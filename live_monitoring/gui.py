@@ -39,39 +39,57 @@ class GroundControlWindow(QtWidgets.QWidget):
     def init_widgets(self):
         #File input
         self.file_management_panel = file_management_widget(self.output)
-        self.layout.addWidget(self.file_management_panel, 1, 0)
+        self.layout.addWidget(self.file_management_panel, 2, 0)
         
         #Text view
         self.console = QtWidgets.QTextBrowser()
-        self.layout.addWidget(self.console, 1, 1, 2, 1)
+        self.layout.addWidget(self.console, 2, 1, 3, 1)
 
         #State management
         self.state_management_panel = state_management_widget(self.output, self.file_management_panel, self._thread_pool, self.graphs, self.numerical_displays, self.program_start_time)
-        self.layout.addWidget(self.state_management_panel, 2, 0)
+        self.layout.addWidget(self.state_management_panel, 3, 0)
         self.state_management_panel.signals.clear_output.connect(self.clear_console)
 
         #Communication output
         self.command_panel = commanding_panel()
-        self.layout.addWidget(self.command_panel, 1, 2, 2, 1)
+        self.layout.addWidget(self.command_panel, 0, 4, 2, 1)
         self.command_panel.command_signal.connect(self.state_management_panel.send_command)
         self.state_management_panel.command_panel = self.command_panel
     
 
     def setup_number_displays(self):
         self.numerical_displays = []
-        # self.numerical_displays.append(custom_number_display("mode", "Mode:"))
-        # self.layout.addWidget(self.numerical_displays[0], 3, 0)
+        self.numerical_displays.append(custom_number_display(1, "Current State: Vibingggggggggggggggg"))
+        self.layout.addWidget(self.numerical_displays[0], 4, 4)
 
     def setup_graphs(self):
         self.graphs = []
 
-        self.graphs.append(custom_graph_widget(names=('euler_x', 'euler_y', 'euler_z'), start=self.program_start_time))
-        self.graphs.append(custom_graph_widget(names=('input_x', 'input_y', 'dt'), start=self.program_start_time))
-        self.graphs.append(custom_graph_widget(names=('velocity_x', 'velocity_y', 'velocity_z'), start=self.program_start_time))
-
+        #self.graphs.append(custom_graph_widget(indexes_in_struct=[1], names=('Nitrogen Line Pressure (psig)'), start=self.program_start_time))
+        #self.graphs.append(custom_graph_widget(indexes_in_struct=[2], names=('Ethanol Tank Pressure (psig)'), start=self.program_start_time))
+        #self.graphs.append(custom_graph_widget(indexes_in_struct=[3], names=('Nitrous Line Pressure (psig)'), start=self.program_start_time))
+        #self.graphs.append(custom_graph_widget(indexes_in_struct=[4], names=('Oxygen Line Pressure (psig)'), start=self.program_start_time))
+        #self.graphs.append(custom_graph_widget(indexes_in_struct=[5], names=('Fuel Inlet Pressure (psig)'), start=self.program_start_time))
+        #self.graphs.append(custom_graph_widget(indexes_in_struct=[6], names=('Fuel Outlet Pressure (psig)'), start=self.program_start_time))
+        #self.graphs.append(custom_graph_widget(indexes_in_struct=[7], names=('Engine Chamber Pressure (psig)'), start=self.program_start_time))
+        #self.graphs.append(custom_graph_widget(indexes_in_struct=[8], names=('Load Cell (lbf)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('Nitrogen Line Pressure (psig)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('Ethanol Tank Pressure (psig)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('Nitrous Line Pressure (psig)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('Oxygen Line Pressure (psig)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('Fuel Inlet Pressure (psig)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('Fuel Outlet Pressure (psig)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('Engine Chamber Pressure (psig)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('Load Cell (lbf)'), start=self.program_start_time))
+       
         self.layout.addWidget(self.graphs[0], 0, 0)
         self.layout.addWidget(self.graphs[1], 0, 1)
         self.layout.addWidget(self.graphs[2], 0, 2)
+        self.layout.addWidget(self.graphs[3], 0, 3)
+        self.layout.addWidget(self.graphs[4], 1, 0)
+        self.layout.addWidget(self.graphs[5], 1, 1)
+        self.layout.addWidget(self.graphs[6], 1, 2)
+        self.layout.addWidget(self.graphs[7], 1, 3)
 
     def output(self, text):
         self.console.append(text)
