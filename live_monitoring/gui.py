@@ -19,7 +19,7 @@ class GroundControlWindow(QtWidgets.QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("AIAA PL Ground Control")
-        self.layout = QtWidgets.QGridLayout(self)
+        self.layout = QtWidgets.QVBoxLayout(self)  # Main vertical layout
         self._thread_pool = QtCore.QThreadPool.globalInstance()
 
         self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyside6'))
@@ -37,30 +37,39 @@ class GroundControlWindow(QtWidgets.QWidget):
             self.command_panel.send_command("COMMAND: ABORT")
 
     def init_widgets(self):
+        # Bottom row - Control widgets (separate horizontal layout)
+        bottom_row_widget = QtWidgets.QWidget()
+        bottom_row_layout = QtWidgets.QHBoxLayout(bottom_row_widget)
+        
         #File input
         self.file_management_panel = file_management_widget(self.output)
-        self.layout.addWidget(self.file_management_panel, 2, 0)
+        bottom_row_layout.addWidget(self.file_management_panel, 1)  # Stretch factor 1
         
-        #Text view
+        #Text view - commented out (not being added to layout)
         self.console = QtWidgets.QTextBrowser()
-        self.layout.addWidget(self.console, 2, 1, 3, 1)
+        #bottom_row_layout.addWidget(self.console)
 
         #State management
         self.state_management_panel = state_management_widget(self.output, self.file_management_panel, self._thread_pool, self.graphs, self.numerical_displays, self.program_start_time)
-        self.layout.addWidget(self.state_management_panel, 3, 0)
+        bottom_row_layout.addWidget(self.state_management_panel, 2)  # Stretch factor 2 (more space)
         self.state_management_panel.signals.clear_output.connect(self.clear_console)
 
         #Communication output
         self.command_panel = commanding_panel()
-        self.layout.addWidget(self.command_panel, 0, 4, 2, 1)
+        bottom_row_layout.addWidget(self.command_panel, 2)  # Stretch factor 2 (more space)
         self.command_panel.command_signal.connect(self.state_management_panel.send_command)
         self.state_management_panel.command_panel = self.command_panel
+        
+        # Add number display to bottom row
+        bottom_row_layout.addWidget(self.numerical_displays[0], 1)  # Stretch factor 1
+        
+        # Add bottom row to main layout
+        self.layout.addWidget(bottom_row_widget, 2)  # Stretch factor 2 (taller)
     
 
     def setup_number_displays(self):
         self.numerical_displays = []
         self.numerical_displays.append(custom_number_display(1, "Current State: Vibingggggggggggggggg"))
-        self.layout.addWidget(self.numerical_displays[0], 4, 4)
 
     def setup_graphs(self):
         self.graphs = []
@@ -81,15 +90,30 @@ class GroundControlWindow(QtWidgets.QWidget):
         self.graphs.append(custom_graph_widget(names=('Fuel Outlet Pressure (psig)'), start=self.program_start_time))
         self.graphs.append(custom_graph_widget(names=('Engine Chamber Pressure (psig)'), start=self.program_start_time))
         self.graphs.append(custom_graph_widget(names=('Load Cell (lbf)'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('euler_x', 'euler_y', 'euler_z'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('input_x', 'input_y', 'dt'), start=self.program_start_time))
+        self.graphs.append(custom_graph_widget(names=('velocity_x', 'velocity_y', 'velocity_z'), start=self.program_start_time))
        
-        self.layout.addWidget(self.graphs[0], 0, 0)
-        self.layout.addWidget(self.graphs[1], 0, 1)
-        self.layout.addWidget(self.graphs[2], 0, 2)
-        self.layout.addWidget(self.graphs[3], 0, 3)
-        self.layout.addWidget(self.graphs[4], 1, 0)
-        self.layout.addWidget(self.graphs[5], 1, 1)
-        self.layout.addWidget(self.graphs[6], 1, 2)
-        self.layout.addWidget(self.graphs[7], 1, 3)
+        # Top row - Pressure readouts (separate horizontal layout)
+        top_row_widget = QtWidgets.QWidget()
+        top_row_layout = QtWidgets.QHBoxLayout(top_row_widget)
+        top_row_layout.addWidget(self.graphs[0])  # Nitrogen Line Pressure
+        top_row_layout.addWidget(self.graphs[1])  # Ethanol Tank Pressure
+        top_row_layout.addWidget(self.graphs[2])  # Nitrous Line Pressure
+        top_row_layout.addWidget(self.graphs[3])  # Oxygen Line Pressure
+        top_row_layout.addWidget(self.graphs[4])  # Fuel Inlet Pressure
+        top_row_layout.addWidget(self.graphs[5])  # Fuel Outlet Pressure
+        top_row_layout.addWidget(self.graphs[6])  # Engine Chamber Pressure
+        top_row_layout.addWidget(self.graphs[7])  # Load Cell
+        self.layout.addWidget(top_row_widget, 1)  # Stretch factor 1 (shorter)
+        
+        # Middle row - Big readouts (separate horizontal layout)
+        middle_row_widget = QtWidgets.QWidget()
+        middle_row_layout = QtWidgets.QHBoxLayout(middle_row_widget)
+        middle_row_layout.addWidget(self.graphs[8])   # euler_x, euler_y, euler_z
+        middle_row_layout.addWidget(self.graphs[9])   # input_x, input_y, dt
+        middle_row_layout.addWidget(self.graphs[10])  # velocity_x, velocity_y, velocity_z
+        self.layout.addWidget(middle_row_widget, 3)  # Stretch factor 3 (taller)
 
     def output(self, text):
         self.console.append(text)
