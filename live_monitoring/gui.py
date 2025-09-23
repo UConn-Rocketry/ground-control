@@ -18,7 +18,7 @@ from commanding_panel import commanding_panel
 class GroundControlWindow(QtWidgets.QWidget):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("AIAA PL Ground Control")
+        self.setWindowTitle("UConn Rocketry Ground Control")
         self.layout = QtWidgets.QVBoxLayout(self)  # Main vertical layout
         self._thread_pool = QtCore.QThreadPool.globalInstance()
 
