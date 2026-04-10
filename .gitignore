@@ -3,3 +3,4 @@ logs
 venv/
 runs/*
 .venv
+.vscode

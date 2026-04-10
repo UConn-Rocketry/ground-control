@@ -1,6 +1,7 @@
 from multiprocessing import Queue, Value, Process, Pipe
 from time import sleep
 import json
+from json import JSONDecodeError
 
 import serial
 from struct import *
@@ -64,11 +65,14 @@ class RF():
             sleep(self._delay_between_packets)
             return
 
-        
         received = self._comport.readline() #reads all available data from input buffer into bytearray
-        
+        message = received.decode("utf-8", errors="replace").strip()
+
+        if not message:
+            return
+
         try:
-            data = json.loads(received)
+            data = json.loads(message)
             print(data)
 
             if(data["data_type"] == "string"):
@@ -78,6 +82,10 @@ class RF():
                 self._telem_frame_queue.put(data["payload"])
                 self._current_telem_frame.update(data["payload"])
                 self.handled_most_recent.value = 0
+        except JSONDecodeError:
+            self._log_queue.put(f"Malformed serial message: {message}")
+        except KeyError as e:
+            self._log_queue.put(f"Missing field in serial message ({e}): {message}")
         except Exception as e:
-            print(e)
+            self._log_queue.put(f"Unexpected serial parsing error ({e}): {message}")
         
