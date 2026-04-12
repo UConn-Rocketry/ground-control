@@ -63,21 +63,21 @@ class commanding_panel(QtWidgets.QLabel):
     def connect_functionality(self):
         self.command.returnPressed.connect(self.send_command_and_clear_text)
         self.send_command_button.clicked.connect(self.send_command_and_clear_text)
-        self.countdown_button.clicked.connect(lambda: self.send_command("COMMAND: standby_to_countdown"))
-        self.standby_button.clicked.connect(lambda: self.send_command("COMMAND: idle_to_standby"))
+        self.countdown_button.clicked.connect(lambda: self.send_command("COMMAND: standby_to_countdown\n"))
+        self.standby_button.clicked.connect(lambda: self.send_command("COMMAND: idle_to_standby\n"))
         self.abort_button.clicked.connect(lambda : self.send_command("ABORT\n"))
         self.IncrementTVCX.clicked.connect(lambda : self.send_command("IncrementXTVC\n"))
         self.IncrementTVCY.clicked.connect(lambda : self.send_command("IncrementYTVC\n"))
         self.DecrementTVCX.clicked.connect(lambda : self.send_command("DecrementXTVC\n"))
         self.DecrementTVCY.clicked.connect(lambda : self.send_command("DecrementYTVC\n"))
         self.drop_open.clicked.connect(lambda : self.open_dropmech())
-        self.drop_close.clicked.connect(lambda : self.send_command("DROPMECH: close"))
+        self.drop_close.clicked.connect(lambda : self.send_command("DROPMECH: close\n"))
 
 
     def open_dropmech(self):
         try:
             if(self.current[1] > 1):
-                self.send_command("DROPMECH: open")
+                self.send_command("DROPMECH: open\n")
             else:
                 self.print("not correct mode")
         except:

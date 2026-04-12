@@ -34,7 +34,7 @@ class GroundControlWindow(QtWidgets.QWidget):
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Space:
-            self.command_panel.send_command("COMMAND: ABORT")
+            self.command_panel.send_command("COMMAND: ABORT\n")
 
     def init_widgets(self):
         #File input

@@ -36,9 +36,9 @@ class file_management_widget(QtWidgets.QWidget):
         select_output_directory_button.clicked.connect(self._get_output_location)
 
     def _set_to_default(self):
-        if Path.is_dir(Path(__file__).parent.parent.joinpath("./runs")):
-            self.output_directory = Path(__file__).parent.parent.joinpath("./runs").absolute()
-            self.find_next_available_save_location_in_current_directory()
+        self.output_directory = Path(__file__).parent.parent.joinpath("./runs").absolute()
+        self.output_directory.mkdir(parents=True, exist_ok=True)
+        self.find_next_available_save_location_in_current_directory()
 
 
 
