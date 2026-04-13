@@ -17,9 +17,6 @@ class RF():
         "velocity_y",
         "velocity_z",
         "dt",
-    )
-
-    LIQUID_TELEM_KEYS = (
         "nitrogen_line_psi",
         "ethanol_tank_psi",
         "nitrous_line_psi",
@@ -124,10 +121,6 @@ class RF():
                 payload = self._payload_to_frame(data["payload"], self.TELEM_KEYS)
                 print("PayLoad = ", payload)
                 self._telem_frame_queue.put(payload)
-                self._current_telem_frame.update(payload)
-                self.handled_most_recent.value = 0
-            elif(data["data_type"] == "liquid_telem"):
-                payload = self._payload_to_frame(data["payload"], self.LIQUID_TELEM_KEYS)
                 self._current_telem_frame.update(payload)
                 self.handled_most_recent.value = 0
             else:
