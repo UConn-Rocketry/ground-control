@@ -4,23 +4,36 @@ import math
 
 #TODO. FIX FOR JSON DATA. Currently expecting binary data and therefore crashing.
 class custom_graph_widget(pg.PlotWidget):
-    def __init__(self, names: tuple, start=0):
+    def __init__(self, names: tuple, start=0, plot_title: str | None = None):
         super().__init__()
         self.names = names
+        self._plot_title = plot_title if plot_title is not None else ", ".join(self.names)
 
         self.graphed_values_num = 40
 
         self.start_time = start
 
         self.graph_lines = {} # name -> ([array of time], [array of data], graphitem)
+        self._apply_style()
+
+    def _apply_style(self):
+        self.setBackground("#121722")
+        self.plotItem.setClipToView(True)
+        self.plotItem.showGrid(x=True, y=True, alpha=0.25)
+        self.plotItem.getAxis("left").setPen(pg.mkPen("#8FA0B3"))
+        self.plotItem.getAxis("bottom").setPen(pg.mkPen("#8FA0B3"))
+        self.plotItem.getAxis("left").setTextPen(pg.mkPen("#C7D0DA"))
+        self.plotItem.getAxis("bottom").setTextPen(pg.mkPen("#C7D0DA"))
+        self.plotItem.setLabel("bottom", "Time (s)")
+        self.plotItem.setTitle(self._plot_title, color="#E6EDF3", size="10pt")
 
     def setup_connection(self, current_frame):
         self.plotItem.addLegend()
-        self.plotItem.showGrid(x=True, y=True, alpha=0.2)
 
         self.current_frame = current_frame
         for index, name in enumerate(self.names):
-            self.graph_lines[name] = ([], [], self.plot([], [], pen=(index, len(self.names)), name=name))
+            line_pen = pg.intColor(index, hues=max(len(self.names), 3), values=1, maxValue=255, minValue=180)
+            self.graph_lines[name] = ([], [], self.plot([], [], pen=pg.mkPen(line_pen, width=2), name=name))
 
     def update_lines(self):
         for name, graph_line in self.graph_lines.items():

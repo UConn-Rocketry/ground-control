@@ -64,9 +64,10 @@ class state_management_widget(QtWidgets.QWidget):
             self.graphed_most_recent_value.value = 1
 
     def _start_animation_timer(self):
-        self.animation_timer = QtCore.QTimer()
-        self.animation_timer.setInterval(25)
-        self.animation_timer.timeout.connect(self._update_plot_data)
+        if not hasattr(self, "animation_timer") or self.animation_timer is None:
+            self.animation_timer = QtCore.QTimer(self)
+            self.animation_timer.setInterval(25)
+            self.animation_timer.timeout.connect(self._update_plot_data)
         self.animation_timer.start()
 
     def reset_graphs(self):
@@ -94,11 +95,12 @@ class state_management_widget(QtWidgets.QWidget):
         if(not self.file_management_panel.check_ready()):
             return
 
-        if(not gui_util.serial_port_available(self.file_management_panel.port_input.text())):
+        port = self.file_management_panel.serial_port()
+        if not gui_util.serial_port_available(port):
             self.output("GUI: Invalid Serial Port")
             return
-        
-        self.initialize_rf(self.file_management_panel.port_input.text(), 9600)
+
+        self.initialize_rf(port, 9600)
         self.signals.connection_monitor.emit(True) 
         self._start_animation_timer()
             
@@ -139,7 +141,7 @@ class state_management_widget(QtWidgets.QWidget):
             self.rf.input_transmitter.close()
 
             self.rf.process.join(timeout=1)
-            if not self.rf.process.exitcode:
+            if self.rf.process.is_alive():
                 self.rf.process.terminate()
             self.rf = None
 

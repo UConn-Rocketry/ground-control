@@ -2,6 +2,20 @@ from PySide6 import QtCore, QtWidgets
 from multiprocessing import Queue
 from time import time
 
+_GUI_TELEM_PREVIEW_MAX_LEN = 320
+
+
+def _format_telem_gui_preview(message) -> str:
+    if isinstance(message, dict):
+        parts = [f"{k}={v}" for k, v in sorted(message.items())]
+        text = " | ".join(parts)
+    else:
+        text = str(message)
+    if len(text) > _GUI_TELEM_PREVIEW_MAX_LEN:
+        return text[: _GUI_TELEM_PREVIEW_MAX_LEN - 3] + "..."
+    return text
+
+
 class log_signals(QtCore.QObject):
     log_signal = QtCore.Signal(str)
 
@@ -37,23 +51,30 @@ class log_handler(QtCore.QRunnable):
 
 
 class telem_frame_handler(QtCore.QRunnable):
-    def __init__(self, path : str, frame_queue: Queue, start: float):
+    def __init__(
+        self,
+        path: str,
+        frame_queue: Queue,
+        start: float,
+        gui_preview_interval_s: float = 0.25,
+    ):
         super().__init__()
         self.path = path
         self.signals = telem_signals()
         self.frame_queue = frame_queue
 
         self.start_time = start
-        
+        self.gui_preview_interval_s = gui_preview_interval_s
 
     def run(self):
         self.signals.telem_signal.emit('GUI: Start data logging')
+        last_gui_emit = 0.0
         with open(self.path, 'a') as file:
-            while(True):
+            while True:
                 message = self.frame_queue.get()
-                if(message == 'STOP'):
+                if message == 'STOP':
                     break
-        
+
                 if isinstance(message, dict):
                     values = message.values()
                 else:
@@ -63,5 +84,15 @@ class telem_frame_handler(QtCore.QRunnable):
                     file.write(str(x) + ",")
                 file.write("{:.2f}".format(time() - self.start_time))
                 file.write('\n')
+
+                if self.gui_preview_interval_s and self.gui_preview_interval_s > 0:
+                    now = time()
+                    if now - last_gui_emit >= self.gui_preview_interval_s:
+                        last_gui_emit = now
+                        elapsed = now - self.start_time
+                        preview = _format_telem_gui_preview(message)
+                        self.signals.telem_signal.emit(
+                            f"Telem t={elapsed:.2f}s {preview}"
+                        )
 
         self.signals.telem_signal.emit('GUI: End data logging, Saved')
