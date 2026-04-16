@@ -1,31 +1,17 @@
 from multiprocessing import Queue, Value, Process, Pipe
-from time import sleep
+from time import sleep, time
 import json
 from json import JSONDecodeError
 
 import serial
 
+from telemetry_schema import ENGINE_TELEM_KEYS, GNC_TELEM_KEYS
+
 
 class RF():
-    TELEM_KEYS = (
-        "euler_x",
-        "euler_y",
-        "euler_z",
-        "input_x",
-        "input_y",
-        "velocity_x",
-        "velocity_y",
-        "velocity_z",
-        "dt",
-        "nitrogen_line_psi",
-        "ethanol_tank_psi",
-        "nitrous_line_psi",
-        "oxygen_line_psi",
-        "fuel_inlet_psi",
-        "fuel_outlet_psi",
-        "chamber_pressure_psi",
-        "load_cell_lbs",
-    )
+    TELEM_KEYS = ENGINE_TELEM_KEYS
+
+    GNC_KEYS = GNC_TELEM_KEYS
 
     def __init__(self, port : str, baud : int, current_value, telem_frame_queue, log_queue, handled_most_recent : Value):
 
@@ -44,6 +30,9 @@ class RF():
         self._telem_frame_queue = telem_frame_queue
         self._log_queue = log_queue
         self._receive_buffer = ""
+        self._malformed_count = 0
+        self._last_seq = None
+        self._seq_gap_count = 0
 
     def connect_serial(self, port: str, baud: int) -> bool:
         try:
@@ -102,7 +91,7 @@ class RF():
             try:
                 message = json.loads(raw_message)
             except JSONDecodeError:
-                self._log_queue.put(f"Malformed serial message: {raw_message}")
+                self._record_malformed(raw_message)
                 continue
 
             self._handle_message(message)
@@ -115,6 +104,25 @@ class RF():
                 self._log_queue.put(f"Unexpected serial message type ({type(data).__name__}): {data}")
                 return
 
+            self._current_telem_frame["_meta_last_rx_epoch"] = time()
+
+            seq = data.get("seq")
+            if isinstance(seq, int):
+                if self._last_seq is not None and seq > self._last_seq + 1:
+                    missed = seq - (self._last_seq + 1)
+                    self._seq_gap_count += missed
+                    self._current_telem_frame["_meta_seq_gap_count"] = self._seq_gap_count
+                    self._log_queue.put(
+                        f"Serial sequence gap detected: missed {missed} packet(s) between seq {self._last_seq} and {seq}"
+                    )
+                elif self._last_seq is not None and seq <= self._last_seq:
+                    self._log_queue.put(
+                        f"Serial sequence out-of-order: seq {seq} arrived after seq {self._last_seq}"
+                    )
+
+                self._last_seq = seq
+                self._current_telem_frame["_meta_last_seq"] = seq
+
             if(data["data_type"] == "string"):
                 self._log_queue.put(data["payload"])
             elif(data["data_type"] == "telem"):
@@ -126,11 +134,16 @@ class RF():
             else:
                 self._log_queue.put(f"Unhandled data_type: {data['data_type']}")
         except JSONDecodeError:
-            self._log_queue.put(f"Malformed serial message: {data}")
+            self._record_malformed(data)
         except KeyError as e:
             self._log_queue.put(f"Missing field in serial message ({e}): {data}")
         except Exception as e:
             self._log_queue.put(f"Unexpected serial parsing error ({e}): {data}")
+
+    def _record_malformed(self, raw_message):
+        self._malformed_count += 1
+        self._current_telem_frame["_meta_malformed_count"] = self._malformed_count
+        self._log_queue.put(f"Malformed serial message: {raw_message}")
 
     def _payload_to_frame(self, payload, keys):
         if isinstance(payload, dict):

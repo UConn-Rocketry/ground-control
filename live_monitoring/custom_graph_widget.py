@@ -28,14 +28,46 @@ class custom_graph_widget(pg.PlotWidget):
         self.plotItem.setTitle(self._plot_title, color="#E6EDF3", size="10pt")
 
     def setup_connection(self, current_frame):
-        self.plotItem.addLegend()
+        use_legend = len(self.names) > 1
+        if use_legend:
+            self.plotItem.addLegend()
 
         self.current_frame = current_frame
         for index, name in enumerate(self.names):
             line_pen = pg.intColor(index, hues=max(len(self.names), 3), values=1, maxValue=255, minValue=180)
-            self.graph_lines[name] = ([], [], self.plot([], [], pen=pg.mkPen(line_pen, width=2), name=name))
+            legend_name = self._legend_label(index, name) if use_legend else None
+            self.graph_lines[name] = (
+                [],
+                [],
+                self.plot([], [], pen=pg.mkPen(line_pen, width=2), name=legend_name),
+            )
+
+    def _legend_label(self, index, name):
+        lowered = str(name).lower()
+        if lowered.endswith("_x"):
+            return "x"
+        if lowered.endswith("_y"):
+            return "y"
+        if lowered.endswith("_z"):
+            return "z"
+        if lowered.endswith("_n"):
+            return "n"
+        if lowered.endswith("_e"):
+            return "e"
+        if lowered.endswith("_d"):
+            return "d"
+        if lowered.endswith("_w"):
+            return "w"
+
+        compact_fallback = ("x", "y", "z", "w")
+        if index < len(compact_fallback):
+            return compact_fallback[index]
+        return f"v{index + 1}"
 
     def update_lines(self):
+        combined_x_values = []
+        combined_y_values = []
+
         for name, graph_line in self.graph_lines.items():
             if name not in self.current_frame:
                 continue
@@ -51,12 +83,23 @@ class custom_graph_widget(pg.PlotWidget):
             y_values = self.graph_lines[name][1][-self.graphed_values_num:]
 
             self.graph_lines[name][2].setData(x_values, y_values)
-            self._stabilize_view(x_values, y_values)
+            combined_x_values.extend(x_values)
+            combined_y_values.extend(y_values)
+
+        self._stabilize_view(combined_x_values, combined_y_values)
 
     def show_history(self):
+        combined_x_values = []
+        combined_y_values = []
+
         for name, graph_line in self.graph_lines.items():
-            self.graph_lines[name][2].setData(self.graph_lines[name][0], self.graph_lines[name][1])
-            self._stabilize_view(self.graph_lines[name][0], self.graph_lines[name][1])
+            history_x = self.graph_lines[name][0]
+            history_y = self.graph_lines[name][1]
+            self.graph_lines[name][2].setData(history_x, history_y)
+            combined_x_values.extend(history_x)
+            combined_y_values.extend(history_y)
+
+        self._stabilize_view(combined_x_values, combined_y_values)
 
     def _stabilize_view(self, x_values, y_values):
         if not x_values or not y_values:
