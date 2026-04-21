@@ -124,9 +124,10 @@ class RF():
                 self._current_telem_frame["_meta_last_seq"] = seq
 
             if(data["data_type"] == "string"):
+                payload = data["payload"]
                 self._log_queue.put(data["payload"])
             elif(data["data_type"] == "telem"):
-                payload = self._payload_to_frame(data["payload"], self.TELEM_KEYS)
+                payload = self._payload_to_frame(data["payload"])
                 print("PayLoad = ", payload)
                 self._telem_frame_queue.put(payload)
                 self._current_telem_frame.update(payload)
@@ -145,14 +146,20 @@ class RF():
         self._current_telem_frame["_meta_malformed_count"] = self._malformed_count
         self._log_queue.put(f"Malformed serial message: {raw_message}")
 
-    def _payload_to_frame(self, payload, keys):
+    def _payload_to_frame(self, payload):
         if isinstance(payload, dict):
             return payload
 
         if not isinstance(payload, list):
             raise TypeError(f"Expected telemetry payload list or dict, got {type(payload).__name__}")
 
-        if len(payload) != len(keys):
-            raise ValueError(f"Expected {len(keys)} values, got {len(payload)}")
+        if len(payload) == len(self.TELEM_KEYS):
+            keys = self.TELEM_KEYS
+        elif len(payload) == len(self.GNC_KEYS):
+            keys = self.GNC_KEYS
+        else:
+            raise ValueError(
+                f"Expected {len(self.TELEM_KEYS)} engine values or {len(self.GNC_KEYS)} GNC values, got {len(payload)}"
+            )
 
         return dict(zip(keys, payload))

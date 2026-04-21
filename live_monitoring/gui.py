@@ -80,6 +80,8 @@ class GroundControlWindow(QtWidgets.QWidget):
         self.gnc_console.setMinimumHeight(90)
 
         self.state_management_panel = state_management_widget(
+            self.output,
+            self.output_gnc,
             self.output_both,
             self.file_management_panel,
             self._thread_pool,
@@ -485,16 +487,41 @@ class GroundControlWindow(QtWidgets.QWidget):
             graph_grid=self.gnc_control_graph_grid,
         )
 
+    def _append_console_message(self, console, text: str):
+        if console is not None:
+            console.append(text)
+
+    def _show_warning_dialog(self, text: str):
+        if not isinstance(text, str) or "Warning:" not in text:
+            return
+
+        message_box = QtWidgets.QMessageBox(self)
+        message_box.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+        message_box.setWindowTitle("Warning")
+        message_box.setText(text)
+        message_box.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+        exit_button = message_box.addButton("Exit", QtWidgets.QMessageBox.ButtonRole.DestructiveRole)
+        message_box.exec()
+
+        if message_box.clickedButton() == exit_button:
+            app = QtWidgets.QApplication.instance()
+            if app is not None:
+                app.quit()
+
     def output(self, text):
-        self.console.append(text)
+        self._show_warning_dialog(text)
+        self._append_console_message(self.console, text)
 
     def output_gnc(self, text):
+        self._show_warning_dialog(text)
         if hasattr(self, "gnc_console"):
-            self.gnc_console.append(text)
+            self._append_console_message(self.gnc_console, text)
 
     def output_both(self, text):
-        self.output(text)
-        self.output_gnc(text)
+        self._show_warning_dialog(text)
+        self._append_console_message(self.console, text)
+        if hasattr(self, "gnc_console"):
+            self._append_console_message(self.gnc_console, text)
 
     def clear_console(self):
         self.console.clear()

@@ -17,11 +17,24 @@ class state_signals(QtCore.QObject):
     serial_health = QtCore.Signal(str, str)
 
 class state_management_widget(QtWidgets.QWidget):
-    def __init__(self, output, file_management_panel : file_management_widget, thread_pool, graphs, numerical_displays, start) -> None:
+    def __init__(
+        self,
+        output,
+        output_gnc,
+        output_both,
+        file_management_panel : file_management_widget,
+        thread_pool,
+        graphs,
+        numerical_displays,
+        start,
+    ) -> None:
         super().__init__()
         self.layout = QtWidgets.QFormLayout(self)
 
-        self.output = output #function that handles output messages
+        self.output_engine = output
+        self.output_gnc = output_gnc
+        self.output_broadcast = output_both
+        self.output = self.output_broadcast
         self.file_management_panel = file_management_panel
         self.thread_pool = thread_pool 
         self.graphs = graphs #list of graphs type: pg.PlotWidget
@@ -63,6 +76,9 @@ class state_management_widget(QtWidgets.QWidget):
 
         self.reset_and_discard_button.setEnabled(False)
         self.reset_and_save_graphs_button.setEnabled(False)
+
+    def output_both(self, text: str):
+        self.output_broadcast(text)
 
 
     def _update_plot_data(self):
@@ -206,8 +222,9 @@ class state_management_widget(QtWidgets.QWidget):
         logging = log_handler(self.log_path, self.log_queue, self.start_time)
         telem = telem_frame_handler(self.data_path, self.frame_queue, self.start_time)
 
-        logging.signals.log_signal.connect(self.output)
-        telem.signals.telem_signal.connect(self.output)
+        logging.signals.log_signal.connect(self.output_both)
+        telem.signals.engine_telem_signal.connect(self.output_engine)
+        telem.signals.gnc_telem_signal.connect(self.output_gnc)
 
         self.thread_pool.start(logging)
         self.thread_pool.start(telem)

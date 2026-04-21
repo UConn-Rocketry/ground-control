@@ -14,28 +14,28 @@ class gnc_commanding_panel(ConfigurableCommandPanel):
 
     def __init__(self):
         sensor_rows = [
-            ToggleRowSpec("Camera", "On", "Off", "SENSOR camera ON", "SENSOR camera OFF"),
-            ToggleRowSpec("LiDAR", "On", "Off", "SENSOR lidar ON", "SENSOR lidar OFF"),
+            ToggleRowSpec("Camera", "On", "Off", "SENSOR: camera ON", "SENSOR: camera OFF"),
+            ToggleRowSpec("LiDAR", "On", "Off", "SENSOR: lidar ON", "SENSOR: lidar OFF"),
             ToggleRowSpec(
                 "GPS Velocity",
                 "On",
                 "Off",
-                "SENSOR gps_velocity ON",
-                "SENSOR gps_velocity OFF",
+                "SENSOR: gps_velocity ON",
+                "SENSOR: gps_velocity OFF",
             ),
             ToggleRowSpec(
                 "GPS Position",
                 "On",
                 "Off",
-                "SENSOR gps_position ON",
-                "SENSOR gps_position OFF",
+                "SENSOR: gps_position ON",
+                "SENSOR: gps_position OFF",
             ),
             ToggleRowSpec(
                 "Magnetometer",
                 "On",
                 "Off",
-                "SENSOR magnetometer ON",
-                "SENSOR magnetometer OFF",
+                "SENSOR: magnetometer ON",
+                "SENSOR: magnetometer OFF",
             ),
         ]
 
