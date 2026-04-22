@@ -491,6 +491,17 @@ class GroundControlWindow(QtWidgets.QWidget):
         if console is not None:
             console.append(text)
 
+    def _abort_and_quit(self):
+        self._send_engine_command("ABORT\n")
+        QtWidgets.QApplication.processEvents()
+        QtCore.QTimer.singleShot(150, self._finish_quit_after_abort)
+
+    def _finish_quit_after_abort(self):
+        self.state_management_panel.stop_listening()
+        app = QtWidgets.QApplication.instance()
+        if app is not None:
+            app.quit()
+
     def _show_warning_dialog(self, text: str):
         if not isinstance(text, str) or "Warning:" not in text:
             return
@@ -504,9 +515,7 @@ class GroundControlWindow(QtWidgets.QWidget):
         message_box.exec()
 
         if message_box.clickedButton() == exit_button:
-            app = QtWidgets.QApplication.instance()
-            if app is not None:
-                app.quit()
+            self._abort_and_quit()
 
     def output(self, text):
         self._show_warning_dialog(text)
