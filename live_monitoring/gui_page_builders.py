@@ -44,7 +44,14 @@ def build_collapsible_section(title, content_widget, start_expanded=True):
     return container
 
 
-def build_engine_page(graph_container, command_panel, serial_controls_panel, console, live_plot_row_span):
+def build_engine_page(
+    graph_container,
+    command_panel,
+    serial_controls_panel,
+    console,
+    shared_console,
+    live_plot_row_span,
+):
     page = QtWidgets.QWidget()
     page_grid = QtWidgets.QGridLayout(page)
     page_grid.setContentsMargins(8, 8, 8, 8)
@@ -60,7 +67,13 @@ def build_engine_page(graph_container, command_panel, serial_controls_panel, con
     ops_layout.setHorizontalSpacing(10)
     ops_layout.setVerticalSpacing(0)
     ops_layout.addWidget(serial_controls_panel, 0, 0)
-    ops_layout.addWidget(console, 0, 1)
+    console_stack = QtWidgets.QWidget()
+    console_stack_layout = QtWidgets.QHBoxLayout(console_stack)
+    console_stack_layout.setContentsMargins(0, 0, 0, 0)
+    console_stack_layout.setSpacing(8)
+    console_stack_layout.addWidget(console)
+    console_stack_layout.addWidget(shared_console)
+    ops_layout.addWidget(console_stack, 0, 1)
     ops_layout.setColumnStretch(0, 0)
     ops_layout.setColumnStretch(1, 1)
 
@@ -88,6 +101,7 @@ def build_gnc_page(
     gnc_command_panel,
     gnc_serial_controls_panel,
     gnc_console,
+    shared_console,
 ):
     page = QtWidgets.QWidget()
     page_grid = QtWidgets.QGridLayout(page)
@@ -140,7 +154,13 @@ def build_gnc_page(
     gnc_ops_layout.setHorizontalSpacing(10)
     gnc_ops_layout.setVerticalSpacing(0)
     gnc_ops_layout.addWidget(gnc_serial_controls_panel, 0, 0)
-    gnc_ops_layout.addWidget(gnc_console, 0, 1)
+    console_stack = QtWidgets.QWidget()
+    console_stack_layout = QtWidgets.QHBoxLayout(console_stack)
+    console_stack_layout.setContentsMargins(0, 0, 0, 0)
+    console_stack_layout.setSpacing(8)
+    console_stack_layout.addWidget(gnc_console)
+    console_stack_layout.addWidget(shared_console)
+    gnc_ops_layout.addWidget(console_stack, 0, 1)
     gnc_ops_layout.setColumnStretch(0, 0)
     gnc_ops_layout.setColumnStretch(1, 1)
 

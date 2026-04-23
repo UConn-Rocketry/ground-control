@@ -128,8 +128,14 @@ class RF():
                 self._log_queue.put(data["payload"])
             elif(data["data_type"] == "telem"):
                 payload = self._payload_to_frame(data["payload"])
+                message_type = data.get("type")
+                queued_message = {
+                    "data_type": "telem",
+                    "type": message_type,
+                    "payload": payload,
+                }
                 print("PayLoad = ", payload)
-                self._telem_frame_queue.put(payload)
+                self._telem_frame_queue.put(queued_message)
                 self._current_telem_frame.update(payload)
                 self.handled_most_recent.value = 0
             else:

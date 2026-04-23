@@ -29,6 +29,14 @@ class telem_signals(QtCore.QObject):
 
 
 def _classify_telem_message(message) -> str | None:
+    if isinstance(message, dict) and message.get("data_type") == "telem":
+        message_type = message.get("type")
+        if message_type == "Liquid":
+            return "engine"
+        if message_type == "GNC":
+            return "gnc"
+        message = message.get("payload")
+
     if not isinstance(message, dict):
         return None
 
@@ -56,13 +64,20 @@ class log_handler(QtCore.QRunnable):
                 if(message == 'STOP'):
                     break
 
-                stamped = str(message) + " time: {:.2f}".format(time() - self.start_time)
+                display_prefix = "Received"
+                display_message = str(message)
+                if isinstance(message, str) and message.startswith("sent: "):
+                    display_prefix = "Sent"
+                    display_message = message[len("sent: "):]
 
-                print(stamped)
-                file.write(stamped)
+                display_stamped = display_message + " time: {:.2f}".format(time() - self.start_time)
+                logged_stamped = f"{display_prefix}: {display_stamped}"
+
+                print(logged_stamped)
+                file.write(logged_stamped)
                 file.write('\n')
 
-                self.signals.log_signal.emit(f"Received: {stamped}")
+                self.signals.log_signal.emit(f"{display_prefix}: {display_stamped}")
 
         self.signals.log_signal.emit('GUI: End Logging, Saved')
 
@@ -84,8 +99,6 @@ class telem_frame_handler(QtCore.QRunnable):
         self.gui_preview_interval_s = gui_preview_interval_s
 
     def run(self):
-        self.signals.engine_telem_signal.emit('GUI: Start data logging')
-        self.signals.gnc_telem_signal.emit('GUI: Start data logging')
         last_gui_emit = 0.0
         with open(self.path, 'a') as file:
             while True:
@@ -93,10 +106,14 @@ class telem_frame_handler(QtCore.QRunnable):
                 if message == 'STOP':
                     break
 
-                if isinstance(message, dict):
-                    values = message.values()
+                payload = message
+                if isinstance(message, dict) and message.get("data_type") == "telem":
+                    payload = message.get("payload", {})
+
+                if isinstance(payload, dict):
+                    values = payload.values()
                 else:
-                    values = message
+                    values = payload
 
                 for x in values:
                     file.write(str(x) + ",")
@@ -108,7 +125,7 @@ class telem_frame_handler(QtCore.QRunnable):
                     if now - last_gui_emit >= self.gui_preview_interval_s:
                         last_gui_emit = now
                         elapsed = now - self.start_time
-                        preview = _format_telem_gui_preview(message)
+                        preview = _format_telem_gui_preview(payload)
                         formatted = f"Telem t={elapsed:.2f}s {preview}"
                         destination = _classify_telem_message(message)
                         if destination == "engine":
@@ -118,6 +135,3 @@ class telem_frame_handler(QtCore.QRunnable):
                         else:
                             self.signals.engine_telem_signal.emit(formatted)
                             self.signals.gnc_telem_signal.emit(formatted)
-
-        self.signals.engine_telem_signal.emit('GUI: End data logging, Saved')
-        self.signals.gnc_telem_signal.emit('GUI: End data logging, Saved')
