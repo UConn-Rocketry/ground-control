@@ -70,16 +70,32 @@ class GroundControlWindow(QtWidgets.QWidget):
         self.console.setObjectName("consoleOutput")
         self.console.setFont(QtGui.QFont("Menlo", 10))
         self.console.setOpenExternalLinks(True)
-        self.console.setPlaceholderText("Telemetry and command logs will appear here...")
+        self.console.setPlaceholderText("Engine telemetry previews will appear here...")
         self.console.setMinimumHeight(100)
 
         self.gnc_console = QtWidgets.QTextBrowser()
         self.gnc_console.setObjectName("consoleOutput")
         self.gnc_console.setFont(QtGui.QFont("Menlo", 10))
-        self.gnc_console.setPlaceholderText("GNC logs will appear here...")
+        self.gnc_console.setPlaceholderText("GNC telemetry previews will appear here...")
         self.gnc_console.setMinimumHeight(90)
 
+        self.shared_console = QtWidgets.QTextBrowser()
+        self.shared_console.setObjectName("consoleOutput")
+        self.shared_console.setFont(QtGui.QFont("Menlo", 10))
+        self.shared_console.setPlaceholderText("Shared sent/received string messages will appear here...")
+        self.shared_console.setMinimumHeight(52)
+        self.shared_console.setMaximumHeight(76)
+
+        self.shared_gnc_console = QtWidgets.QTextBrowser()
+        self.shared_gnc_console.setObjectName("consoleOutput")
+        self.shared_gnc_console.setFont(QtGui.QFont("Menlo", 10))
+        self.shared_gnc_console.setPlaceholderText("Shared sent/received string messages will appear here...")
+        self.shared_gnc_console.setMinimumHeight(52)
+        self.shared_gnc_console.setMaximumHeight(76)
+
         self.state_management_panel = state_management_widget(
+            self.output,
+            self.output_gnc,
             self.output_both,
             self.file_management_panel,
             self._thread_pool,
@@ -104,6 +120,7 @@ class GroundControlWindow(QtWidgets.QWidget):
             on_reset_save=lambda: self._invoke_serial_action(self.state_management_panel.save_and_reset),
             on_reset_discard=lambda: self._invoke_serial_action(self.state_management_panel.discard_files_and_reset),
             on_clear_logs=self.console.clear,
+            on_clear_string_logs=self.shared_console.clear,
         )
         self.gnc_serial_controls_panel = SerialControlsPanel(
             on_connect=lambda: self._invoke_serial_action(self.state_management_panel.connect_and_listen),
@@ -111,6 +128,7 @@ class GroundControlWindow(QtWidgets.QWidget):
             on_reset_save=lambda: self._invoke_serial_action(self.state_management_panel.save_and_reset),
             on_reset_discard=lambda: self._invoke_serial_action(self.state_management_panel.discard_files_and_reset),
             on_clear_logs=self.gnc_console.clear,
+            on_clear_string_logs=self.shared_gnc_console.clear,
         )
         self._serial_control_panels = [self.engine_serial_controls_panel, self.gnc_serial_controls_panel]
 
@@ -142,6 +160,7 @@ class GroundControlWindow(QtWidgets.QWidget):
             command_panel=self.engine_command_panel,
             serial_controls_panel=self.engine_serial_controls_panel,
             console=self.console,
+            shared_console=self.shared_console,
             live_plot_row_span=self._LIVE_PLOT_ROW_SPAN,
         )
 
@@ -151,6 +170,7 @@ class GroundControlWindow(QtWidgets.QWidget):
             gnc_command_panel=self.gnc_command_panel,
             gnc_serial_controls_panel=self.gnc_serial_controls_panel,
             gnc_console=self.gnc_console,
+            shared_console=self.shared_gnc_console,
         )
         self.gnc_tab = gnc_parts.page
         self.gnc_view_stack = gnc_parts.view_stack
@@ -485,21 +505,60 @@ class GroundControlWindow(QtWidgets.QWidget):
             graph_grid=self.gnc_control_graph_grid,
         )
 
+    def _append_console_message(self, console, text: str):
+        if console is not None:
+            console.append(text)
+
+    def _abort_and_quit(self):
+        self._send_engine_command("ABORT\n")
+        QtWidgets.QApplication.processEvents()
+        QtCore.QTimer.singleShot(150, self._finish_quit_after_abort)
+
+    def _finish_quit_after_abort(self):
+        self.state_management_panel.stop_listening()
+        app = QtWidgets.QApplication.instance()
+        if app is not None:
+            app.quit()
+
+    def _show_warning_dialog(self, text: str):
+        if not isinstance(text, str) or "Warning:" not in text:
+            return
+
+        message_box = QtWidgets.QMessageBox(self)
+        message_box.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+        message_box.setWindowTitle("Warning")
+        message_box.setText(text)
+        message_box.addButton(QtWidgets.QMessageBox.StandardButton.Ok)
+        exit_button = message_box.addButton("Exit", QtWidgets.QMessageBox.ButtonRole.DestructiveRole)
+        message_box.exec()
+
+        if message_box.clickedButton() == exit_button:
+            self._abort_and_quit()
+
     def output(self, text):
-        self.console.append(text)
+        self._show_warning_dialog(text)
+        self._append_console_message(self.console, text)
 
     def output_gnc(self, text):
+        self._show_warning_dialog(text)
         if hasattr(self, "gnc_console"):
-            self.gnc_console.append(text)
+            self._append_console_message(self.gnc_console, text)
 
     def output_both(self, text):
-        self.output(text)
-        self.output_gnc(text)
+        self._show_warning_dialog(text)
+        if hasattr(self, "shared_console"):
+            self._append_console_message(self.shared_console, text)
+        if hasattr(self, "shared_gnc_console"):
+            self._append_console_message(self.shared_gnc_console, text)
 
     def clear_console(self):
         self.console.clear()
         if hasattr(self, "gnc_console"):
             self.gnc_console.clear()
+        if hasattr(self, "shared_console"):
+            self.shared_console.clear()
+        if hasattr(self, "shared_gnc_console"):
+            self.shared_gnc_console.clear()
 
     def closeEvent(self, event):
         self.state_management_panel.stop_listening()
