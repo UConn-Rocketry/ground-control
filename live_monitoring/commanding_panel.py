@@ -55,6 +55,7 @@ class commanding_panel(ConfigurableCommandPanel):
             ButtonSpec("Ignite", "Ignite"),
             ButtonSpec("ASITest", "asitest"),
             ButtonSpec("WaterFlow", "waterflow"),
+            ButtonSpec("3SecondHotFire", "3second"),
             ButtonSpec("Abort", "ABORT"),
         ]
 
