@@ -26,6 +26,13 @@ class commanding_panel(ConfigurableCommandPanel):
                 "VALVE: main nitrous close",
             ),
             ToggleRowSpec(
+                "Nitrous Fill Valve",
+                "Open",
+                "Close",
+                "VALVE: nitrous fill open",
+                "VALVE: nitrous fill close",
+            ),
+            ToggleRowSpec(
                 "ASI Ethanol Valve",
                 "Open",
                 "Close",
