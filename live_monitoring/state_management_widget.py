@@ -49,7 +49,6 @@ class state_management_widget(QtWidgets.QWidget):
         self._serial_health_timer = None
         self._stale_warning_active = False
         self._received_any_telem = False
-        self._last_malformed_count = 0
         self._last_seq_gap_count = 0
         self._listen_started_at = 0.0
         self._health_status = "disconnected"
@@ -134,23 +133,14 @@ class state_management_widget(QtWidgets.QWidget):
             self.output("Warning: No telemetry packets received yet")
             self._stale_warning_active = True
 
-        malformed_count = self.current_frame.get("_meta_malformed_count", 0)
-        if isinstance(malformed_count, int) and malformed_count > self._last_malformed_count:
-            delta = malformed_count - self._last_malformed_count
-            self.output(
-                f"Warning: Malformed serial messages +{delta} (total {malformed_count})"
-            )
-            self._last_malformed_count = malformed_count
-
         seq_gap_count = self.current_frame.get("_meta_seq_gap_count", 0)
         if isinstance(seq_gap_count, int) and seq_gap_count > self._last_seq_gap_count:
             delta = seq_gap_count - self._last_seq_gap_count
             self.output(f"Warning: Estimated dropped packets +{delta} (total {seq_gap_count})")
             self._last_seq_gap_count = seq_gap_count
 
-        malformed_total = malformed_count if isinstance(malformed_count, int) else 0
         seq_gap_total = seq_gap_count if isinstance(seq_gap_count, int) else 0
-        has_quality_issues = (malformed_total > 0) or (seq_gap_total > 0)
+        has_quality_issues = seq_gap_total > 0
 
         if isinstance(last_rx, (int, float)):
             age = now - last_rx
@@ -159,7 +149,7 @@ class state_management_widget(QtWidgets.QWidget):
             elif has_quality_issues:
                 self._set_health_status(
                     "degraded",
-                    f"Link degraded: malformed={malformed_total}, dropped~={seq_gap_total}",
+                    f"Link degraded: dropped~={seq_gap_total}",
                 )
             else:
                 self._set_health_status("healthy", "Telemetry healthy")
@@ -214,7 +204,6 @@ class state_management_widget(QtWidgets.QWidget):
         self._listen_started_at = time()
         self._stale_warning_active = False
         self._received_any_telem = False
-        self._last_malformed_count = 0
         self._last_seq_gap_count = 0
         self._set_health_status("waiting", "Listening, waiting for telemetry")
         self._start_serial_health_timer()

@@ -30,7 +30,6 @@ class RF():
         self._telem_frame_queue = telem_frame_queue
         self._log_queue = log_queue
         self._receive_buffer = ""
-        self._malformed_count = 0
         self._last_seq = None
         self._seq_gap_count = 0
         self._duplicate_seq_count = 0
@@ -93,7 +92,6 @@ class RF():
                 print(raw_message)
                 message = json.loads(raw_message)
             except JSONDecodeError:
-                self._record_malformed(raw_message)
                 continue
 
             self._handle_message(message)
@@ -145,17 +143,10 @@ class RF():
                 self.handled_most_recent.value = 0
             else:
                 self._log_queue.put(f"Unhandled data_type: {data['data_type']}")
-        except JSONDecodeError:
-            self._record_malformed(data)
         except KeyError as e:
             self._log_queue.put(f"Missing field in serial message ({e}): {data}")
         except Exception as e:
             self._log_queue.put(f"Unexpected serial parsing error ({e}): {data}")
-
-    def _record_malformed(self, raw_message):
-        self._malformed_count += 1
-        self._current_telem_frame["_meta_malformed_count"] = self._malformed_count
-        self._log_queue.put(f"Malformed serial message: {raw_message}")
 
     def _payload_to_frame(self, payload):
         if isinstance(payload, dict):
