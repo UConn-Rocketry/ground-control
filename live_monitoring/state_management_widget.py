@@ -203,7 +203,7 @@ class state_management_widget(QtWidgets.QWidget):
             self.output("GUI: Invalid Serial Port")
             return
 
-        self.initialize_rf(port, 9600)
+        self.initialize_rf(port, 38400)
         self.signals.connection_monitor.emit(True) 
         self._start_animation_timer()
             

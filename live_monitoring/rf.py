@@ -33,6 +33,7 @@ class RF():
         self._malformed_count = 0
         self._last_seq = None
         self._seq_gap_count = 0
+        self._duplicate_seq_count = 0
 
     def connect_serial(self, port: str, baud: int) -> bool:
         try:
@@ -89,6 +90,7 @@ class RF():
                 continue
 
             try:
+                print(raw_message)
                 message = json.loads(raw_message)
             except JSONDecodeError:
                 self._record_malformed(raw_message)
@@ -98,8 +100,6 @@ class RF():
 
     def _handle_message(self, data):
         try:
-            print(data)
-
             if not isinstance(data, dict):
                 self._log_queue.put(f"Unexpected serial message type ({type(data).__name__}): {data}")
                 return
@@ -108,6 +108,11 @@ class RF():
 
             seq = data.get("seq")
             if isinstance(seq, int):
+                if self._last_seq is not None and seq == self._last_seq:
+                    self._duplicate_seq_count += 1
+                    self._current_telem_frame["_meta_duplicate_seq_count"] = self._duplicate_seq_count
+                    self._log_queue.put(f"Serial duplicate packet ignored: seq {seq}")
+                    return
                 if self._last_seq is not None and seq > self._last_seq + 1:
                     missed = seq - (self._last_seq + 1)
                     self._seq_gap_count += missed
@@ -119,6 +124,7 @@ class RF():
                     self._log_queue.put(
                         f"Serial sequence out-of-order: seq {seq} arrived after seq {self._last_seq}"
                     )
+                    return
 
                 self._last_seq = seq
                 self._current_telem_frame["_meta_last_seq"] = seq
@@ -134,7 +140,6 @@ class RF():
                     "type": message_type,
                     "payload": payload,
                 }
-                print("PayLoad = ", payload)
                 self._telem_frame_queue.put(queued_message)
                 self._current_telem_frame.update(payload)
                 self.handled_most_recent.value = 0
