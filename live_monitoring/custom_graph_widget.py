@@ -28,6 +28,13 @@ class custom_graph_widget(pg.PlotWidget):
         self.plotItem.setTitle(self._plot_title, color="#E6EDF3", size="10pt")
 
     def setup_connection(self, current_frame):
+        self.plotItem.clear()
+        if self.plotItem.legend is not None:
+            self.plotItem.legend.scene().removeItem(self.plotItem.legend)
+            self.plotItem.legend = None
+
+        self.graph_lines = {}
+
         use_legend = len(self.names) > 1
         if use_legend:
             self.plotItem.addLegend()

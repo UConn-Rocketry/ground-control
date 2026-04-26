@@ -45,7 +45,7 @@ class state_management_widget(QtWidgets.QWidget):
         self.start_time = start
 
         self.signals = state_signals()
-        self._telem_stale_timeout_s = 1.0
+        self._telem_stale_timeout_s = 5.0
         self._serial_health_timer = None
         self._stale_warning_active = False
         self._received_any_telem = False

@@ -80,6 +80,7 @@ class RF():
             return
 
         self._receive_buffer += received.decode("utf-8", errors="replace")
+        print("Received data from serial port:", self._receive_buffer)
 
         while "\n" in self._receive_buffer:
             raw_message, self._receive_buffer = self._receive_buffer.split("\n", 1)
@@ -89,7 +90,6 @@ class RF():
                 continue
 
             try:
-                print(raw_message)
                 message = json.loads(raw_message)
             except JSONDecodeError:
                 continue
