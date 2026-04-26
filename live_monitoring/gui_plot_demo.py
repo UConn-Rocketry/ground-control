@@ -44,9 +44,9 @@ class GuiPlotDemo:
         self.frame["velocity_y"] = -0.9 * math.sin(0.18 * t)
         self.frame["velocity_z"] = 0.6 * math.cos(0.14 * t + 0.3)
 
-        self.frame["euler_x"] = 0.35 * math.sin(0.7 * t)
-        self.frame["euler_y"] = 0.28 * math.cos(0.6 * t + 0.9)
-        self.frame["euler_z"] = 0.52 * math.sin(0.45 * t + 0.2)
+        self.frame["rotation_x"] = 0.35 * math.sin(0.7 * t)
+        self.frame["rotation_y"] = 0.28 * math.cos(0.6 * t + 0.9)
+        self.frame["rotation_z"] = 0.52 * math.sin(0.45 * t + 0.2)
 
         self.frame["omega_x"] = 0.15 * math.cos(0.9 * t)
         self.frame["omega_y"] = 0.13 * math.sin(0.8 * t + 0.5)
