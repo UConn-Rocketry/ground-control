@@ -2,7 +2,6 @@ import sys
 
 from PySide6 import QtCore, QtWidgets
 from pathlib import Path
-from os import mkdir
 from shutil import rmtree
 
 import serial.tools.list_ports
@@ -90,8 +89,8 @@ class file_management_widget(QtWidgets.QWidget):
         self.show_output_directory.setText(str(self.output_location))
 
     def create_files(self):
-        mkdir(self.output_location)
-        mkdir(self.output_location.joinpath("./Graphs"))
+        self.output_location.mkdir(parents=True, exist_ok=True)
+        self.output_location.joinpath("./Graphs").mkdir(exist_ok=True)
 
         data_path = self.output_location.joinpath("./data.csv")
         log_path = self.output_location.joinpath("./output.log")

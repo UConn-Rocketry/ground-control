@@ -29,6 +29,10 @@ class GroundControlWindow(QtWidgets.QWidget):
     _GRAPH_MAX_COLS = 4
     # Match liquids layout: plot block height (rows) + command sidebar spanning same rows.
     _LIVE_PLOT_ROW_SPAN = 3
+    _NON_MODAL_WARNING_PREFIXES = (
+        "Warning: Telemetry stream stale",
+        "Warning: No telemetry packets received yet",
+    )
 
     def __init__(self) -> None:
         super().__init__()
@@ -66,13 +70,6 @@ class GroundControlWindow(QtWidgets.QWidget):
     def init_widgets(self):
         self.file_management_panel = file_management_widget(self.output)
 
-        self.console = QtWidgets.QTextBrowser()
-        self.console.setObjectName("consoleOutput")
-        self.console.setFont(QtGui.QFont("Menlo", 10))
-        self.console.setOpenExternalLinks(True)
-        self.console.setPlaceholderText("Engine telemetry previews will appear here...")
-        self.console.setMinimumHeight(100)
-
         self.gnc_console = QtWidgets.QTextBrowser()
         self.gnc_console.setObjectName("consoleOutput")
         self.gnc_console.setFont(QtGui.QFont("Menlo", 10))
@@ -94,7 +91,7 @@ class GroundControlWindow(QtWidgets.QWidget):
         self.shared_gnc_console.setMaximumHeight(76)
 
         self.state_management_panel = state_management_widget(
-            self.output,
+            self._discard_output,
             self.output_gnc,
             self.output_both,
             self.file_management_panel,
@@ -119,7 +116,7 @@ class GroundControlWindow(QtWidgets.QWidget):
             on_stop=lambda: self._invoke_serial_action(self.state_management_panel.stop_listening),
             on_reset_save=lambda: self._invoke_serial_action(self.state_management_panel.save_and_reset),
             on_reset_discard=lambda: self._invoke_serial_action(self.state_management_panel.discard_files_and_reset),
-            on_clear_logs=self.console.clear,
+            on_clear_logs=self._noop,
             on_clear_string_logs=self.shared_console.clear,
         )
         self.gnc_serial_controls_panel = SerialControlsPanel(
@@ -159,7 +156,6 @@ class GroundControlWindow(QtWidgets.QWidget):
             graph_container=self.engine_graph_container,
             command_panel=self.engine_command_panel,
             serial_controls_panel=self.engine_serial_controls_panel,
-            console=self.console,
             shared_console=self.shared_console,
             live_plot_row_span=self._LIVE_PLOT_ROW_SPAN,
         )
@@ -509,6 +505,12 @@ class GroundControlWindow(QtWidgets.QWidget):
         if console is not None:
             console.append(text)
 
+    def _discard_output(self, _text: str):
+        return
+
+    def _noop(self):
+        return
+
     def _abort_and_quit(self):
         self._send_engine_command("ABORT\n")
         QtWidgets.QApplication.processEvents()
@@ -522,6 +524,8 @@ class GroundControlWindow(QtWidgets.QWidget):
 
     def _show_warning_dialog(self, text: str):
         if not isinstance(text, str) or "Warning:" not in text:
+            return
+        if text.startswith(self._NON_MODAL_WARNING_PREFIXES):
             return
 
         message_box = QtWidgets.QMessageBox(self)
@@ -537,7 +541,7 @@ class GroundControlWindow(QtWidgets.QWidget):
 
     def output(self, text):
         self._show_warning_dialog(text)
-        self._append_console_message(self.console, text)
+        self._append_console_message(None, text)
 
     def output_gnc(self, text):
         self._show_warning_dialog(text)
@@ -552,7 +556,6 @@ class GroundControlWindow(QtWidgets.QWidget):
             self._append_console_message(self.shared_gnc_console, text)
 
     def clear_console(self):
-        self.console.clear()
         if hasattr(self, "gnc_console"):
             self.gnc_console.clear()
         if hasattr(self, "shared_console"):

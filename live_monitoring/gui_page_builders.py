@@ -48,7 +48,6 @@ def build_engine_page(
     graph_container,
     command_panel,
     serial_controls_panel,
-    console,
     shared_console,
     live_plot_row_span,
 ):
@@ -71,7 +70,6 @@ def build_engine_page(
     console_stack_layout = QtWidgets.QHBoxLayout(console_stack)
     console_stack_layout.setContentsMargins(0, 0, 0, 0)
     console_stack_layout.setSpacing(8)
-    console_stack_layout.addWidget(console)
     console_stack_layout.addWidget(shared_console)
     ops_layout.addWidget(console_stack, 0, 1)
     ops_layout.setColumnStretch(0, 0)

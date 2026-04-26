@@ -228,7 +228,7 @@ class state_management_widget(QtWidgets.QWidget):
             self.looping_for_data.value = 0
 
             self.stop_listening_button.setEnabled(False)
-            self.connect_serial_button.setEnabled(False)
+            self.connect_serial_button.setEnabled(True)
         
             for graph in self.graphs:
                 graph.show_history()
@@ -249,6 +249,8 @@ class state_management_widget(QtWidgets.QWidget):
         except AttributeError:
             pass
         finally:
+            self.connect_serial_button.setEnabled(True)
+            self.stop_listening_button.setEnabled(False)
             self._set_health_status("disconnected", "Serial disconnected")
             self.signals.connection_monitor.emit(False)
 
