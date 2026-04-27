@@ -70,12 +70,6 @@ class GroundControlWindow(QtWidgets.QWidget):
     def init_widgets(self):
         self.file_management_panel = file_management_widget(self.output)
 
-        self.gnc_console = QtWidgets.QTextBrowser()
-        self.gnc_console.setObjectName("consoleOutput")
-        self.gnc_console.setFont(QtGui.QFont("Menlo", 10))
-        self.gnc_console.setPlaceholderText("GNC telemetry previews will appear here...")
-        self.gnc_console.setMinimumHeight(90)
-
         self.shared_console = QtWidgets.QTextBrowser()
         self.shared_console.setObjectName("consoleOutput")
         self.shared_console.setFont(QtGui.QFont("Menlo", 10))
@@ -92,7 +86,6 @@ class GroundControlWindow(QtWidgets.QWidget):
 
         self.state_management_panel = state_management_widget(
             self._discard_output,
-            self.output_gnc,
             self.output_both,
             self.file_management_panel,
             self._thread_pool,
@@ -116,7 +109,6 @@ class GroundControlWindow(QtWidgets.QWidget):
             on_stop=lambda: self._invoke_serial_action(self.state_management_panel.stop_listening),
             on_reset_save=lambda: self._invoke_serial_action(self.state_management_panel.save_and_reset),
             on_reset_discard=lambda: self._invoke_serial_action(self.state_management_panel.discard_files_and_reset),
-            on_clear_logs=self._noop,
             on_clear_string_logs=self.shared_console.clear,
         )
         self.gnc_serial_controls_panel = SerialControlsPanel(
@@ -124,7 +116,6 @@ class GroundControlWindow(QtWidgets.QWidget):
             on_stop=lambda: self._invoke_serial_action(self.state_management_panel.stop_listening),
             on_reset_save=lambda: self._invoke_serial_action(self.state_management_panel.save_and_reset),
             on_reset_discard=lambda: self._invoke_serial_action(self.state_management_panel.discard_files_and_reset),
-            on_clear_logs=self.gnc_console.clear,
             on_clear_string_logs=self.shared_gnc_console.clear,
         )
         self._serial_control_panels = [self.engine_serial_controls_panel, self.gnc_serial_controls_panel]
@@ -165,7 +156,6 @@ class GroundControlWindow(QtWidgets.QWidget):
             gnc_control_graph_container=self.gnc_control_graph_container,
             gnc_command_panel=self.gnc_command_panel,
             gnc_serial_controls_panel=self.gnc_serial_controls_panel,
-            gnc_console=self.gnc_console,
             shared_console=self.shared_gnc_console,
         )
         self.gnc_tab = gnc_parts.page
@@ -508,9 +498,6 @@ class GroundControlWindow(QtWidgets.QWidget):
     def _discard_output(self, _text: str):
         return
 
-    def _noop(self):
-        return
-
     def _abort_and_quit(self):
         self._send_engine_command("ABORT\n")
         QtWidgets.QApplication.processEvents()
@@ -545,8 +532,7 @@ class GroundControlWindow(QtWidgets.QWidget):
 
     def output_gnc(self, text):
         self._show_warning_dialog(text)
-        if hasattr(self, "gnc_console"):
-            self._append_console_message(self.gnc_console, text)
+        self._append_console_message(None, text)
 
     def output_both(self, text):
         self._show_warning_dialog(text)
@@ -556,8 +542,6 @@ class GroundControlWindow(QtWidgets.QWidget):
             self._append_console_message(self.shared_gnc_console, text)
 
     def clear_console(self):
-        if hasattr(self, "gnc_console"):
-            self.gnc_console.clear()
         if hasattr(self, "shared_console"):
             self.shared_console.clear()
         if hasattr(self, "shared_gnc_console"):

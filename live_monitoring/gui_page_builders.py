@@ -98,7 +98,6 @@ def build_gnc_page(
     gnc_control_graph_container,
     gnc_command_panel,
     gnc_serial_controls_panel,
-    gnc_console,
     shared_console,
 ):
     page = QtWidgets.QWidget()
@@ -156,7 +155,6 @@ def build_gnc_page(
     console_stack_layout = QtWidgets.QHBoxLayout(console_stack)
     console_stack_layout.setContentsMargins(0, 0, 0, 0)
     console_stack_layout.setSpacing(8)
-    console_stack_layout.addWidget(gnc_console)
     console_stack_layout.addWidget(shared_console)
     gnc_ops_layout.addWidget(console_stack, 0, 1)
     gnc_ops_layout.setColumnStretch(0, 0)

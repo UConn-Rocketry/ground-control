@@ -8,7 +8,6 @@ class SerialControlsPanel(QtWidgets.QWidget):
         on_stop,
         on_reset_save,
         on_reset_discard,
-        on_clear_logs,
         on_clear_string_logs,
     ):
         super().__init__()
@@ -28,21 +27,19 @@ class SerialControlsPanel(QtWidgets.QWidget):
         self.stop_button = QtWidgets.QPushButton("Stop Listening")
         self.reset_save_button = QtWidgets.QPushButton("Reset and Save Graphs")
         self.reset_discard_button = QtWidgets.QPushButton("Reset and Discard")
-        self.clear_logs_button = QtWidgets.QPushButton("Clear Other Logs")
         self.clear_string_logs_button = QtWidgets.QPushButton("Clear String Logs")
 
         self.connect_button.clicked.connect(on_connect)
         self.stop_button.clicked.connect(on_stop)
         self.reset_save_button.clicked.connect(on_reset_save)
         self.reset_discard_button.clicked.connect(on_reset_discard)
-        self.clear_logs_button.clicked.connect(on_clear_logs)
         self.clear_string_logs_button.clicked.connect(on_clear_string_logs)
 
         layout.addRow(self.health_badge)
         layout.addRow(self.connect_button)
         layout.addRow(self.stop_button)
         layout.addRow(self.reset_save_button, self.reset_discard_button)
-        layout.addRow(self.clear_logs_button, self.clear_string_logs_button)
+        layout.addRow(self.clear_string_logs_button)
 
         self.set_health("disconnected", "Disconnected", "Serial disconnected")
 

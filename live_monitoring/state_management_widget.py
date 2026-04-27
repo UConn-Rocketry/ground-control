@@ -20,7 +20,6 @@ class state_management_widget(QtWidgets.QWidget):
     def __init__(
         self,
         output,
-        output_gnc,
         output_both,
         file_management_panel : file_management_widget,
         thread_pool,
@@ -32,7 +31,6 @@ class state_management_widget(QtWidgets.QWidget):
         self.layout = QtWidgets.QFormLayout(self)
 
         self.output_engine = output
-        self.output_gnc = output_gnc
         self.output_broadcast = output_both
         self.output = self.output_broadcast
         self.file_management_panel = file_management_panel
@@ -213,7 +211,7 @@ class state_management_widget(QtWidgets.QWidget):
 
         logging.signals.log_signal.connect(self.output_both)
         telem.signals.engine_telem_signal.connect(self.output_engine)
-        telem.signals.gnc_telem_signal.connect(self.output_gnc)
+        telem.signals.gnc_telem_signal.connect(self.output_engine)
 
         self.thread_pool.start(logging)
         self.thread_pool.start(telem)
