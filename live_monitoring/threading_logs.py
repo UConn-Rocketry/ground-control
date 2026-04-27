@@ -7,6 +7,7 @@ from telemetry_schema import ENGINE_TELEM_KEYS, GNC_TELEM_KEYS
 _GUI_TELEM_PREVIEW_MAX_LEN = 320
 _ENGINE_TELEM_KEY_SET = set(ENGINE_TELEM_KEYS)
 _GNC_TELEM_KEY_SET = set(GNC_TELEM_KEYS)
+LOGGING_PREFIX_IGNORE_SET = set("Actuator: ")
 
 
 def _format_telem_gui_preview(message) -> str:
@@ -63,6 +64,10 @@ class log_handler(QtCore.QRunnable):
                 message = self.log_queue.get()
                 if(message == 'STOP'):
                     break
+
+                for prefix in LOGGING_PREFIX_IGNORE_SET:
+                    if(message.startswith(prefix)):
+                        continue
 
                 display_prefix = "Received"
                 display_message = str(message)
