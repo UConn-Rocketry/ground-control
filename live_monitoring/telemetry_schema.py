@@ -47,13 +47,13 @@ GNC_TELEM_KEYS = (
 ENGINE_PLOT_SPECS = [
     ("nitrogen_line_psi", "N2 line pressure (psi)", "N2 line pressure", (0, 1000)),
     ("ethanol_tank_psi", "Ethanol tank (psi)", "Ethanol tank", (0, 1000)),
-    ("nitrous_line_psi", "Nitrous line (psi)", "Nitrous line", (0, 1000)),
+    ("nitrous_line_psi", "Nitrous fill (psi)", "Nitrous line", (0, 1000)),
     ("nitrous_tank_line_psi", "Nitrous tank line (psi)", "Nitrous tank line", (0, 1000)),
-    ("oxygen_line_psi", "Oxygen line (psi)", "Oxygen line", (0, 200)),
+    ("oxygen_line_psi", "Oxygen line (psi)", "Oxygen line", (0, 1000)),
     ("fuel_inlet_psi", "Fuel inlet (psi)", "Fuel inlet", (0, 1000)),
     ("fuel_outlet_psi", "Fuel outlet (psi)", "Fuel outlet", (0, 1000)),
     ("chamber_pressure_psi", "Chamber pressure (psi)", "Chamber pressure", (0, 1000)),
-    ("load_cell_lbs", "Load cell (lb)", "Load cell", (0, 1100)),
+    ("load_cell_lbs", "Load cell (lb)", "Load cell", (0, 500)),
 ]
 
 # names, title, checkbox label

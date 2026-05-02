@@ -4,10 +4,17 @@ import math
 
 #TODO. FIX FOR JSON DATA. Currently expecting binary data and therefore crashing.
 class custom_graph_widget(pg.PlotWidget):
-    def __init__(self, names: tuple, start=0, plot_title: str | None = None):
+    def __init__(
+        self,
+        names: tuple,
+        start=0,
+        plot_title: str | None = None,
+        fixed_y_range: tuple[float, float] | None = None,
+    ):
         super().__init__()
         self.names = names
         self._plot_title = plot_title if plot_title is not None else ", ".join(self.names)
+        self.fixed_y_range = fixed_y_range
 
         self.graphed_values_num = 40
 
@@ -15,6 +22,8 @@ class custom_graph_widget(pg.PlotWidget):
 
         self.graph_lines = {} # name -> ([array of time], [array of data], graphitem)
         self._apply_style()
+        if self.fixed_y_range is not None:
+            self._apply_fixed_y_axis()
 
     def _apply_style(self):
         self.setBackground("#121722")
@@ -24,6 +33,7 @@ class custom_graph_widget(pg.PlotWidget):
         self.plotItem.getAxis("bottom").setPen(pg.mkPen("#8FA0B3"))
         self.plotItem.getAxis("left").setTextPen(pg.mkPen("#C7D0DA"))
         self.plotItem.getAxis("bottom").setTextPen(pg.mkPen("#C7D0DA"))
+        self._set_x_tick_spacing(5)
         self.plotItem.setLabel("bottom", "Time (s)")
         self.plotItem.setTitle(self._plot_title, color="#E6EDF3", size="10pt")
 
@@ -71,6 +81,56 @@ class custom_graph_widget(pg.PlotWidget):
             return compact_fallback[index]
         return f"v{index + 1}"
 
+    def _apply_fixed_y_axis(self):
+        y_min, y_max = self.fixed_y_range
+        view_min, view_max = self._fixed_y_view_range(y_min, y_max)
+        self.plotItem.setYRange(view_min, view_max, padding=0)
+        self.plotItem.getAxis("left").setTicks([self._fixed_y_ticks(y_min, y_max)])
+
+    def _fixed_y_view_range(self, y_min, y_max):
+        if y_min == y_max:
+            margin = max(abs(y_min) * 0.05, 0.5)
+        else:
+            margin = abs(y_max - y_min) * 0.03
+
+        return y_min - margin, y_max + margin
+
+    def _fixed_y_ticks(self, y_min, y_max):
+        tick_count = 5
+        if y_min == y_max:
+            return [(y_min, self._format_tick_label(y_min))]
+
+        step = (y_max - y_min) / (tick_count - 1)
+        return [
+            (value, self._format_tick_label(value))
+            for value in (y_min + step * index for index in range(tick_count))
+        ]
+
+    def _format_tick_label(self, value):
+        if abs(value) < 1e-9:
+            value = 0
+        return f"{value:g}"
+
+    def _set_x_tick_spacing(self, major):
+        self.plotItem.getAxis("bottom").setTickSpacing(major=major, minor=major / 5)
+
+    def _apply_x_axis_for_range(self, x_min, x_max):
+        span = max(x_max - x_min, 0)
+        if span <= 30:
+            major = 5
+        elif span <= 60:
+            major = 10
+        elif span <= 120:
+            major = 20
+        elif span <= 300:
+            major = 60
+        elif span <= 600:
+            major = 120
+        else:
+            major = 300
+
+        self._set_x_tick_spacing(major)
+
     def update_lines(self):
         combined_x_values = []
         combined_y_values = []
@@ -114,17 +174,21 @@ class custom_graph_widget(pg.PlotWidget):
 
         x_min = min(x_values)
         x_max = max(x_values)
-        y_min = min(y_values)
-        y_max = max(y_values)
-
         if x_min == x_max:
             x_min -= 0.5
             x_max += 0.5
 
-        if y_min == y_max:
-            padding = max(abs(y_min) * 0.05, 0.5)
-            y_min -= padding
-            y_max += padding
-
+        self._apply_x_axis_for_range(x_min, x_max)
         self.plotItem.setXRange(x_min, x_max, padding=0.02)
-        self.plotItem.setYRange(y_min, y_max, padding=0.1)
+        if self.fixed_y_range is None:
+            y_min = min(y_values)
+            y_max = max(y_values)
+
+            if y_min == y_max:
+                padding = max(abs(y_min) * 0.05, 0.5)
+                y_min -= padding
+                y_max += padding
+
+            self.plotItem.setYRange(y_min, y_max, padding=0.1)
+        else:
+            self._apply_fixed_y_axis()

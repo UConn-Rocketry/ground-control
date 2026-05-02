@@ -313,7 +313,12 @@ class GroundControlWindow(QtWidgets.QWidget):
         for key, title, label, y_range in ENGINE_PLOT_SPECS:
             if key in available_engine_keys:
                 self.engine_graphs.append(
-                    custom_graph_widget(names=(key,), start=self.program_start_time, plot_title=title)
+                    custom_graph_widget(
+                        names=(key,),
+                        start=self.program_start_time,
+                        plot_title=title,
+                        fixed_y_range=y_range,
+                    )
                 )
                 engine_graph_labels.append(label)
                 engine_ranges_by_key[key] = y_range
