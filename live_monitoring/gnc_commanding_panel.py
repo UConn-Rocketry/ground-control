@@ -40,7 +40,9 @@ class gnc_commanding_panel(ConfigurableCommandPanel):
         ]
 
         commands = [
-            ButtonSpec("Go Idle", "GoIdle"),
+            ButtonSpec("Idle", "Idle"),
+            ButtonSpec("Standby", "Standby"),            
+            ButtonSpec("Calibration", "Calibration"),
             ButtonSpec("Ignite", "Ignite"),
             ButtonSpec("Test TVC", "TestTVC"),
             ButtonSpec("ActuatorCalibration", "ActuatorCalibration"),

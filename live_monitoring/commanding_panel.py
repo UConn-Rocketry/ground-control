@@ -57,8 +57,10 @@ class commanding_panel(ConfigurableCommandPanel):
         ]
 
         command_buttons = [
-            ButtonSpec("GoIdle", "GoIdle"),
-            ButtonSpec("GoHotFireIdle", "GoHotfireIdle"),
+            ButtonSpec("Idle", "Idle"),
+            ButtonSpec("Standby", "Standby"),
+            ButtonSpec("Calibration", "Calibration"),
+            ButtonSpec("HotFireIdle", "HotfireIdle"),
             ButtonSpec("Ignite", "Ignite"),
             ButtonSpec("ASITest", "asitest"),
             ButtonSpec("WaterFlow", "waterflow"),
