@@ -1,3 +1,5 @@
+
+# Telemetry Payload order MUST MATCH BELOW
 ENGINE_TELEM_KEYS = (
     "nitrogen_line_psi",
     "ethanol_tank_psi",
@@ -10,6 +12,7 @@ ENGINE_TELEM_KEYS = (
     "load_cell_lbs",
 )
 
+# Telemetry Payload order MUST MATCH BELOW
 GNC_TELEM_KEYS = (
     "position_x",
     "position_y",
