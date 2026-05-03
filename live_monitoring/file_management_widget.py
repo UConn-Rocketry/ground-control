@@ -1,10 +1,13 @@
 import sys
+import csv
 
 from PySide6 import QtCore, QtWidgets
 from pathlib import Path
 from shutil import rmtree
 
 import serial.tools.list_ports
+
+from telemetry_schema import ENGINE_TELEM_KEYS, GNC_TELEM_KEYS
 
 
 class file_management_widget(QtWidgets.QWidget):
@@ -92,13 +95,17 @@ class file_management_widget(QtWidgets.QWidget):
         self.output_location.mkdir(parents=True, exist_ok=True)
         self.output_location.joinpath("./Graphs").mkdir(exist_ok=True)
 
-        data_path = self.output_location.joinpath("./data.csv")
+        liquid_data_path = self.output_location.joinpath("./liquids.csv")
+        gnc_data_path = self.output_location.joinpath("./gnc.csv")
         log_path = self.output_location.joinpath("./output.log")
 
-        with open(data_path, "w"):
-            pass
+        with open(liquid_data_path, "w", newline="") as file:
+            csv.writer(file).writerow(("time_seconds", *ENGINE_TELEM_KEYS))
 
-        return data_path, log_path
+        with open(gnc_data_path, "w", newline="") as file:
+            csv.writer(file).writerow(("time_seconds", *GNC_TELEM_KEYS))
+
+        return liquid_data_path, gnc_data_path, log_path
 
     def check_ready(self):
         if not self.output_location:

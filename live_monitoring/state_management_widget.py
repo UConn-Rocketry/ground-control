@@ -43,7 +43,7 @@ class state_management_widget(QtWidgets.QWidget):
         self.start_time = start
 
         self.signals = state_signals()
-        self._telem_stale_timeout_s = 5.0
+        self._telem_stale_timeout_s = 60
         self._serial_health_timer = None
         self._stale_warning_active = False
         self._received_any_telem = False
@@ -195,7 +195,7 @@ class state_management_widget(QtWidgets.QWidget):
         self.signals.connection_monitor.emit(True) 
         self._start_animation_timer()
             
-        self.data_path, self.log_path = self.file_management_panel.create_files()
+        self.liquid_data_path, self.gnc_data_path, self.log_path = self.file_management_panel.create_files()
 
         self.looping_for_data.value = 1
         self.rf.start_listen_loop(self.looping_for_data)
@@ -207,7 +207,12 @@ class state_management_widget(QtWidgets.QWidget):
         self._start_serial_health_timer()
 
         logging = log_handler(self.log_path, self.log_queue, self.start_time)
-        telem = telem_frame_handler(self.data_path, self.frame_queue, self.start_time)
+        telem = telem_frame_handler(
+            self.liquid_data_path,
+            self.gnc_data_path,
+            self.frame_queue,
+            self.start_time,
+        )
 
         logging.signals.log_signal.connect(self.output_both)
         telem.signals.engine_telem_signal.connect(self.output_engine)

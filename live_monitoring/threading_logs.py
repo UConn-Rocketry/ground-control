@@ -1,3 +1,5 @@
+import csv
+
 from PySide6 import QtCore
 from multiprocessing import Queue
 from time import time
@@ -90,13 +92,15 @@ class log_handler(QtCore.QRunnable):
 class telem_frame_handler(QtCore.QRunnable):
     def __init__(
         self,
-        path: str,
+        liquid_path: str,
+        gnc_path: str,
         frame_queue: Queue,
         start: float,
         gui_preview_interval_s: float = 0.25,
     ):
         super().__init__()
-        self.path = path
+        self.liquid_path = liquid_path
+        self.gnc_path = gnc_path
         self.signals = telem_signals()
         self.frame_queue = frame_queue
 
@@ -105,7 +109,10 @@ class telem_frame_handler(QtCore.QRunnable):
 
     def run(self):
         last_gui_emit = 0.0
-        with open(self.path, 'a') as file:
+        with open(self.liquid_path, "a", newline="") as liquid_file, open(self.gnc_path, "a", newline="") as gnc_file:
+            liquid_writer = csv.writer(liquid_file)
+            gnc_writer = csv.writer(gnc_file)
+
             while True:
                 message = self.frame_queue.get()
                 if message == 'STOP':
@@ -116,23 +123,30 @@ class telem_frame_handler(QtCore.QRunnable):
                     payload = message.get("payload", {})
 
                 if isinstance(payload, dict):
-                    values = payload.values()
+                    destination = _classify_telem_message(message)
+                    if destination == "engine":
+                        values = [payload.get(key, "") for key in ENGINE_TELEM_KEYS]
+                    elif destination == "gnc":
+                        values = [payload.get(key, "") for key in GNC_TELEM_KEYS]
+                    else:
+                        values = list(payload.values())
                 else:
+                    destination = _classify_telem_message(message)
                     values = payload
 
-                for x in values:
-                    file.write(str(x) + ",")
-                file.write("{:.2f}".format(time() - self.start_time))
-                file.write('\n')
+                elapsed = time() - self.start_time
+                row = ["{:.2f}".format(elapsed), *values]
+                if destination == "engine":
+                    liquid_writer.writerow(row)
+                elif destination == "gnc":
+                    gnc_writer.writerow(row)
 
                 if self.gui_preview_interval_s and self.gui_preview_interval_s > 0:
                     now = time()
                     if now - last_gui_emit >= self.gui_preview_interval_s:
                         last_gui_emit = now
-                        elapsed = now - self.start_time
                         preview = _format_telem_gui_preview(payload)
-                        formatted = f"Telem t={elapsed:.2f}s {preview}"
-                        destination = _classify_telem_message(message)
+                        formatted = f"Telem t={now - self.start_time:.2f}s {preview}"
                         if destination == "engine":
                             self.signals.engine_telem_signal.emit(formatted)
                         elif destination == "gnc":

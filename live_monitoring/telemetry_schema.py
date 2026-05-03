@@ -1,8 +1,8 @@
 ENGINE_TELEM_KEYS = (
     "nitrogen_line_psi",
     "ethanol_tank_psi",
-    "nitrous_line_psi",
-    "nitrous_tank_line_psi",
+    "nitrous_fill_psi",
+    "nitrous_tank_psi",
     "oxygen_line_psi",
     "fuel_inlet_psi",
     "fuel_outlet_psi",
@@ -43,12 +43,17 @@ GNC_TELEM_KEYS = (
     "guidance_translation_error_y",
 )
 
-# key, title, checkbox label, optional y-range tuple
+# Plot spec tuple formats:
+# - Engine specs: (telemetry_key, graph_title, checkbox_label, fixed_y_range)
+#   Engine plots draw one telemetry key per graph and lock the y-axis to fixed_y_range.
+# - GNC specs: ((telemetry_key, ...), graph_title, checkbox_label)
+#   GNC plots can draw multiple related telemetry keys on the same graph.
+# telemetry_key values must match the keys above so incoming serial telemetry maps to graphs.
 ENGINE_PLOT_SPECS = [
     ("nitrogen_line_psi", "N2 line pressure (psi)", "N2 line pressure", (0, 1000)),
     ("ethanol_tank_psi", "Ethanol tank (psi)", "Ethanol tank", (0, 1000)),
-    ("nitrous_line_psi", "Nitrous fill (psi)", "Nitrous line", (0, 1000)),
-    ("nitrous_tank_line_psi", "Nitrous tank line (psi)", "Nitrous tank line", (0, 1000)),
+    ("nitrous_fill_psi", "Nitrous Fill (psi)", "Nitrous Fill", (0, 1000)),
+    ("nitrous_tank_psi", "Nitrous tank (psi)", "Nitrous tank", (0, 1000)),
     ("oxygen_line_psi", "Oxygen line (psi)", "Oxygen line", (0, 1000)),
     ("fuel_inlet_psi", "Fuel inlet (psi)", "Fuel inlet", (0, 1000)),
     ("fuel_outlet_psi", "Fuel outlet (psi)", "Fuel outlet", (0, 1000)),
